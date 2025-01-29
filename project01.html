@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Digital Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #clock {
+            font-size: 3rem;
+            color: black;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        label {
+            margin: 0 10px;
+        }
+        input[type="color"], input[type="number"] {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Customizable Digital Clock</h1>
+    <div id="clock">00:00:00</div>
+
+    <div class="controls">
+        <button id="toggleFormat">Switch to 24-hour format</button>
+        <br><br>
+        <label for="fontSize">Font size:</label>
+        <input type="number" id="fontSize" value="48" min="10" max="100">
+        <br>
+        <label for="color">Clock color:</label>
+        <input type="color" id="color" value="#000000">
+        <br><br>
+        <label for="alarmTime">Set Alarm (HH:MM):</label>
+        <input type="time" id="alarmTime">
+        <button id="setAlarm">Set Alarm</button>
+        <div id="alarmMessage" style="margin-top: 10px; color: red;"></div>
+    </div>
+
+    <script>
+        const clock = document.getElementById("clock");
+        const toggleFormatButton = document.getElementById("toggleFormat");
+        const fontSizeInput = document.getElementById("fontSize");
+        const colorInput = document.getElementById("color");
+        const alarmTimeInput = document.getElementById("alarmTime");
+        const setAlarmButton = document.getElementById("setAlarm");
+        const alarmMessage = document.getElementById("alarmMessage");
+
+        let is24Hour = false;
+        let alarmTime = null;
+
+        // Load preferences from localStorage
+        const savedFormat = localStorage.getItem("clockFormat");
+        const savedFontSize = localStorage.getItem("fontSize");
+        const savedColor = localStorage.getItem("clockColor");
+        const savedAlarm = localStorage.getItem("alarmTime");
+
+        if (savedFormat) is24Hour = JSON.parse(savedFormat);
+        if (savedFontSize) clock.style.fontSize = `${savedFontSize}px`;
+        if (savedColor) clock.style.color = savedColor;
+        if (savedAlarm) alarmTime = savedAlarm;
+
+        fontSizeInput.value = parseInt(clock.style.fontSize) || 48;
+        colorInput.value = savedColor || "#000000";
+        if (alarmTime) alarmTimeInput.value = alarmTime;
+
+        toggleFormatButton.textContent = is24Hour ? "Switch to 12-hour format" : "Switch to 24-hour format";
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+
+            if (!is24Hour) {
+                const period = hours >= 12 ? "PM" : "AM";
+                hours = hours % 12 || 12;
+                clock.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)} ${period}`;
+            } else {
+                clock.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+            }
+
+            if (alarmTime && `${pad(hours)}:${pad(minutes)}` === alarmTime) {
+                alarmMessage.textContent = "⏰ Alarm! Time's up!";
+                setTimeout(() => alarmMessage.textContent = "", 5000);
+                alarmTime = null; // Reset alarm
+                localStorage.removeItem("alarmTime");
+            }
+        }
+
+        function pad(value) {
+            return value.toString().padStart(2, "0");
+        }
+
+        toggleFormatButton.addEventListener("click", () => {
+            is24Hour = !is24Hour;
+            localStorage.setItem("clockFormat", is24Hour);
+            toggleFormatButton.textContent = is24Hour ? "Switch to 12-hour format" : "Switch to 24-hour format";
+        });
+
+        fontSizeInput.addEventListener("input", () => {
+            const size = fontSizeInput.value;
+            clock.style.fontSize = `${size}px`;
+            localStorage.setItem("fontSize", size);
+        });
+
+        colorInput.addEventListener("input", () => {
+            const color = colorInput.value;
+            clock.style.color = color;
+            localStorage.setItem("clockColor", color);
+        });
+
+        setAlarmButton.addEventListener("click", () => {
+            alarmTime = alarmTimeInput.value;
+            localStorage.setItem("alarmTime", alarmTime);
+            alarmMessage.textContent = `Alarm set for ${alarmTime}`;
+        });
+
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Drawing Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: 20px auto;
+        }
+        .controls {
+            margin: 20px;
+        }
+        .controls input {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Customizable Drawing Canvas</h1>
+    <div class="controls">
+        <label for="brush-color">Brush Color:</label>
+        <input type="color" id="brush-color" value="#000000">
+
+        <label for="brush-size">Brush Size:</label>
+        <input type="number" id="brush-size" min="1" max="50" value="5">
+
+        <label for="bg-color">Canvas Background:</label>
+        <input type="color" id="bg-color" value="#ffffff">
+
+        <button id="clear-btn">Clear</button>
+        <button id="undo-btn">Undo</button>
+        <button id="save-btn">Save as Image</button>
+    </div>
+    <canvas id="drawing-canvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const brushColorInput = document.getElementById('brush-color');
+        const brushSizeInput = document.getElementById('brush-size');
+        const bgColorInput = document.getElementById('bg-color');
+        const clearBtn = document.getElementById('clear-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const saveBtn = document.getElementById('save-btn');
+
+        let drawing = false;
+        let paths = [];
+        let currentPath = [];
+
+        // Initialize canvas background color
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            currentPath = [];
+            addPoint(e);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (drawing) {
+                addPoint(e);
+                redraw();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            if (currentPath.length > 0) {
+                paths.push(currentPath);
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            drawing = false;
+        });
+
+        function addPoint(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            currentPath.push({ x, y, color: brushColorInput.value, size: brushSizeInput.value });
+        }
+
+        function redraw() {
+            ctx.fillStyle = bgColorInput.value;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            paths.forEach(path => {
+                ctx.beginPath();
+                path.forEach((point, index) => {
+                    ctx.strokeStyle = point.color;
+                    ctx.lineWidth = point.size;
+                    if (index === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+            });
+
+            if (currentPath.length > 0) {
+                ctx.beginPath();
+                currentPath.forEach((point, index) => {
+                    ctx.strokeStyle = point.color;
+                    ctx.lineWidth = point.size;
+                    if (index === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+            }
+        }
+
+        clearBtn.addEventListener('click', () => {
+            paths = [];
+            currentPath = [];
+            redraw();
+        });
+
+        undoBtn.addEventListener('click', () => {
+            if (drawing) {
+                currentPath = [];
+            } else if (paths.length > 0) {
+                paths.pop();
+            }
+            redraw();
+        });
+
+        saveBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        bgColorInput.addEventListener('change', redraw);
+    </script>
+</body>
+</html>

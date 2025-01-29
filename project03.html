@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Matching Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #007BFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .card.flipped, .card.matched {
+            background-color: #28a745;
+            cursor: default;
+        }
+        .hidden {
+            visibility: hidden;
+        }
+        .controls {
+            margin: 20px;
+        }
+        .stats {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Matching Game</h1>
+    <div class="stats">
+        <p>Moves: <span id="move-count">0</span></p>
+        <p>Time: <span id="time">0</span> seconds</p>
+    </div>
+    <div id="game-board"></div>
+    <div class="controls">
+        <button id="restart">Restart Game</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const restartButton = document.getElementById('restart');
+        const moveCountElement = document.getElementById('move-count');
+        const timeElement = document.getElementById('time');
+
+        let cards = [];
+        let firstCard = null;
+        let secondCard = null;
+        let moves = 0;
+        let matchedPairs = 0;
+        let timer = null;
+        let time = 0;
+
+        const symbols = ["🍎", "🍌", "🍇", "🍓", "🍒", "🍍", "🥝", "🍉"];
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {
+            board.innerHTML = "";
+            moves = 0;
+            matchedPairs = 0;
+            firstCard = null;
+            secondCard = null;
+            moveCountElement.textContent = moves;
+            time = 0;
+            timeElement.textContent = time;
+
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                time++;
+                timeElement.textContent = time;
+            }, 1000);
+
+            const shuffledSymbols = shuffle([...symbols, ...symbols]);
+
+            cards = shuffledSymbols.map((symbol, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                card.addEventListener('click', flipCard);
+                board.appendChild(card);
+                return card;
+            });
+        }
+
+        function flipCard() {
+            if (this.classList.contains('flipped') || this.classList.contains('matched') || secondCard) {
+                return;
+            }
+
+            this.classList.add('flipped');
+            this.textContent = this.dataset.symbol;
+
+            if (!firstCard) {
+                firstCard = this;
+            } else {
+                secondCard = this;
+                moves++;
+                moveCountElement.textContent = moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            if (firstCard.dataset.symbol === secondCard.dataset.symbol) {
+                firstCard.classList.add('matched');
+                secondCard.classList.add('matched');
+                matchedPairs++;
+
+                if (matchedPairs === symbols.length) {
+                    clearInterval(timer);
+                    alert(`You won! Moves: ${moves}, Time: ${time} seconds`);
+                }
+
+                resetSelection();
+            } else {
+                setTimeout(() => {
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    firstCard.textContent = "";
+                    secondCard.textContent = "";
+                    resetSelection();
+                }, 1000);
+            }
+        }
+
+        function resetSelection() {
+            firstCard = null;
+            secondCard = null;
+        }
+
+        restartButton.addEventListener('click', startGame);
+
+        // Initialize game on load
+        startGame();
+    </script>
+</body>
+</html>

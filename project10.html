@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Keyboard Trainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .settings, .results {
+            margin: 20px 0;
+        }
+        .text-display {
+            font-size: 1.5rem;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: left;
+        }
+        .text-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .highlight-error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Customizable Keyboard Trainer</h1>
+        <div class="settings">
+            <label>
+                Difficulty:
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </label>
+            <button onclick="startTraining()">Start</button>
+        </div>
+        <div class="text-display" id="textDisplay">Press Start to begin</div>
+        <input type="text" id="textInput" class="text-input" placeholder="Type here..." disabled oninput="checkInput()">
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const texts = {
+            easy: [
+                "The cat jumps over the moon.",
+                "I love sunny days.",
+                "Life is beautiful."
+            ],
+            medium: [
+                "The keyboard trainer helps improve typing speed.",
+                "Learning to type faster takes consistent practice.",
+                "Accuracy is just as important as speed."
+            ],
+            hard: [
+                "Multithreading allows programs to perform multiple tasks simultaneously.",
+                "Synchronous and asynchronous operations behave differently in programming.",
+                "Juxtaposition creates an interesting contrast between two ideas."
+            ]
+        };
+
+        let targetText = "";
+        let startTime = 0;
+        let errors = 0;
+
+        function startTraining() {
+            const difficulty = document.getElementById("difficulty").value;
+            targetText = texts[difficulty][Math.floor(Math.random() * texts[difficulty].length)];
+            document.getElementById("textDisplay").innerHTML = targetText;
+            document.getElementById("textInput").value = "";
+            document.getElementById("textInput").disabled = false;
+            document.getElementById("textInput").focus();
+            document.getElementById("results").innerHTML = "";
+            startTime = new Date().getTime();
+            errors = 0;
+        }
+
+        function checkInput() {
+            const input = document.getElementById("textInput").value;
+            const display = document.getElementById("textDisplay");
+
+            display.innerHTML = highlightErrors(input, targetText);
+
+            if (targetText.startsWith(input)) {
+                if (input === targetText) {
+                    calculateResults();
+                }
+            } else {
+                errors++;
+            }
+        }
+
+        function highlightErrors(input, target) {
+            let highlighted = "";
+            for (let i = 0; i < target.length; i++) {
+                if (i < input.length) {
+                    if (input[i] === target[i]) {
+                        highlighted += target[i];
+                    } else {
+                        highlighted += `<span class='highlight-error'>${target[i]}</span>`;
+                    }
+                } else {
+                    highlighted += target[i];
+                }
+            }
+            return highlighted;
+        }
+
+        function calculateResults() {
+            const timeTaken = (new Date().getTime() - startTime) / 1000; // in seconds
+            const wpm = (targetText.split(" ").length / (timeTaken / 60)).toFixed(2);
+            const accuracy = Math.max(0, ((targetText.length - errors) / targetText.length) * 100).toFixed(2);
+
+            document.getElementById("results").innerHTML = `
+                <p>Words Per Minute: ${wpm}</p>
+                <p>Accuracy: ${accuracy}%</p>
+                <button onclick="startTraining()">Restart</button>
+            `;
+            document.getElementById("textInput").disabled = true;
+        }
+    </script>
+</body>
+</html>

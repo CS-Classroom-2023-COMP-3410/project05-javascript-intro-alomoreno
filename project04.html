@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quiz App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .question {
+            margin: 20px 0;
+        }
+        .options {
+            margin: 10px 0;
+        }
+        .option {
+            margin: 5px 0;
+            display: inline-block;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .option.selected {
+            background-color: #f94949;
+        }
+        .summary {
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quiz App</h1>
+    <div id="quiz-container">
+        <div id="question-container" class="question"></div>
+        <div id="options-container" class="options"></div>
+        <button id="next-button">Next</button>
+    </div>
+    <div id="summary-container" class="summary hidden">
+        <h2>Quiz Summary</h2>
+        <p>Your score: <span id="score">0</span></p>
+        <div id="review-container"></div>
+        <button id="restart-button">Restart</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                answer: 2
+            },
+            {
+                question: "What is 2 + 2?",
+                options: ["3", "4", "5", "6"],
+                answer: 1
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Earth", "Mars", "Jupiter", "Venus"],
+                answer: 1
+            },
+            {
+                question: "Who wrote 'Romeo and Juliet'?",
+                options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
+                answer: 1
+            },
+            {
+                question: "What is the largest mammal in the world?",
+                options: ["Elephant", "Blue Whale", "Great White Shark", "Giraffe"],
+                answer: 1
+            },
+            {
+                question: "What is the boiling point of water?",
+                options: ["90°C", "100°C", "110°C", "120°C"],
+                answer: 1
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-button');
+
+        const summaryContainer = document.getElementById('summary-container');
+        const scoreElement = document.getElementById('score');
+        const reviewContainer = document.getElementById('review-container');
+        const restartButton = document.getElementById('restart-button');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        function displayQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            questionContainer.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = "";
+
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option');
+                if (userAnswers[currentQuestionIndex] === index) {
+                    button.classList.add('selected');
+                }
+                button.onclick = () => selectAnswer(index, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex, button) {
+            userAnswers[currentQuestionIndex] = selectedIndex;
+
+            // Highlight the selected option
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            button.classList.add('selected');
+
+            nextButton.disabled = false;
+        }
+
+        function showSummary() {
+            quizContainer.classList.add('hidden');
+            summaryContainer.classList.remove('hidden');
+
+            score = 0;
+            reviewContainer.innerHTML = "";
+
+            questions.forEach((question, index) => {
+                const correctIndex = question.answer;
+                const userAnswer = userAnswers[index];
+
+                if (userAnswer === correctIndex) {
+                    score++;
+                }
+
+                const reviewItem = document.createElement('div');
+                reviewItem.innerHTML = `
+                    <p><strong>Q${index + 1}:</strong> ${question.question}</p>
+                    <p>Your answer: <span style="color: ${userAnswer === correctIndex ? 'green' : 'red'};">
+                        ${question.options[userAnswer] || "Not answered"}</span></p>
+                    <p>Correct answer: ${question.options[correctIndex]}</p>
+                    <button onclick="correctAnswer(${index})">Edit Answer</button>
+                    <hr>
+                `;
+                reviewContainer.appendChild(reviewItem);
+            });
+
+            scoreElement.textContent = score;
+        }
+
+        function correctAnswer(index) {
+            currentQuestionIndex = index;
+            summaryContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            displayQuestion();
+            nextButton.disabled = true;
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+
+            summaryContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+
+            displayQuestion();
+            nextButton.disabled = true;
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+                nextButton.disabled = true;
+            } else {
+                showSummary();
+            }
+        });
+
+        restartButton.addEventListener('click', resetQuiz);
+
+        // Initialize the quiz
+        resetQuiz();
+    </script>
+</body>
+</html>
